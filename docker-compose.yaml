@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14.3-alpine
+    hostname: db
+    restart: always
+    env_file:
+     - db.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+        - "5432:5432"
+    networks:
+      - document-network
+
+  web:
+    build:
+      context: ./einvestment
+      dockerfile: Dockerfile
+    image: web:prod
+    command: gunicorn einvestment.wsgi:application -w 8 --bind 0.0.0.0:8000
+
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+    expose:
+      - 8000
+    ports:
+      - 8000:8000
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - document-network
+
+  nginx:
+    build: ./nginx
+    image: nginx:prod
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - web
+    networks:
+      - document-network
+
+  # celery:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   image: celery:prod
+  #   command: celery -A document_flow worker --loglevel=info
+  #   #command: celery -A document_flow worker --loglevel=info --logfile=logs/celery.log
+  #   volumes:
+  #     - ./backend/:/app/
+  #   env_file:
+  #     - ./celery.env
+  #   depends_on:
+  #     - redis
+  #     - web
+  #   networks:
+  #     - document-network
+
+  # redis:
+  #   image: redis:6-alpine
+  #   networks:
+  #     - document-network
+  
+  # react:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - static_volume:/app/staticfiles
+  #     - media_volume:/app/mediafiles
+  #   depends_on:
+  #     - web
+  #   networks:
+  #     - document-network
+
+networks:
+  document-network:
+    name: document-network
+
+volumes:
+  postgres_data:
+  #elast_data:
+  #mongodb:
+  static_volume:
+  media_volume:
