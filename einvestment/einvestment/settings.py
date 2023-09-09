@@ -100,9 +100,11 @@ CORS_ORIGIN_WHITELIST = [
     'http://api.fibrolit.uz',
     'https://fibrolit.uz',
     'http://fibrolit.uz',
+    '165.227.132.247',
 ]
 CSRF_TRUSTED_ORIGINS = [
-    'https://api.fibrolit.uz'
+    'https://api.fibrolit.uz',
+    '165.227.132.247',
 ]
 
 

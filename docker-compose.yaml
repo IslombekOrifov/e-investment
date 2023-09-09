@@ -47,6 +47,16 @@ services:
       - web
     networks:
       - document-network
+  
+  certbot:
+    image: certbot/certbot
+    depends_on:
+      - nginx
+    container_name: certbot
+    volumes:
+      - etc-letsencrypt:/etc/letsencrypt
+      - www-html:/var/www/e-investment
+    command: certonly --webroot --webroot-path=/var/www/e-investment --email islombekorifov@mail.ru --agree-tos --no-eff-email --staging -d api.fibrolit.uz
 
   # celery:
   #   build:
