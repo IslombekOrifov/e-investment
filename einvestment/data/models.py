@@ -44,8 +44,8 @@ class InformativeData(models.Model):
     total_area = models.DecimalField(max_digits=6, decimal_places=0, default=0)
     building_area = models.DecimalField(max_digits=6, decimal_places=0, default=0)
     tech_equipment = models.CharField(max_length=30, default='')
-    product_photo = models.ImageField(upload_to='files/product_photo/', default='default.jpg')
-    cadastral_info = models.ImageField(upload_to='files/cadastral_info/', default='default.jpg')
+    product_photo = models.ImageField(upload_to='files/product_photo/') #default='default.jpg'
+    cadastral_info = models.ImageField(upload_to='files/cadastral_info/') #default='default.jpg'
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='informative_data')
 
     is_validated = models.BooleanField(default=False)
@@ -55,7 +55,7 @@ class InformativeData(models.Model):
 
 
 class ObjectPhoto(models.Model):
-    image = models.ImageField(upload_to='files/object_photo/', default='default.jpg')
+    image = models.ImageField(upload_to='files/object_photo/') # default='default.jpg'
     informative_data = models.ForeignKey(InformativeData, on_delete=models.CASCADE, related_name='object_photos')
 
 
