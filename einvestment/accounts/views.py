@@ -2,7 +2,10 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 
 from django.utils.timezone import now
-from datetime import timedelta
+from datetime import timedelta, datetime
+
+
+from uuid import uuid4
 
 # It'll be used in cellery
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -11,7 +14,10 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 import six
 
-from .serializers import UserLegalStatusSerializer
+from .serializers import (
+    UserLegalStatusSerializer, UserProfileSerializer, UserInfoUpdateSerializer,
+    UserPasswordUpdateSerializer, ResetUserPasswordSerializer
+)
 
 
 class TokenGenerator(PasswordResetTokenGenerator):
@@ -168,10 +174,102 @@ class UserLegalStatusView(generics.RetrieveAPIView):
     def get_object(self):
         return User.objects.filter(pk=self.request.user.pk).first()
     
+    
 
-class UserInfoView(generics.RetrieveAPIView):
-    serializer_class = UserLegalStatusSerializer
+class UserProfileView(generics.RetrieveAPIView):
+    serializer_class = UserProfileSerializer
     permissions = [permissions.IsAuthenticated]
 
     def get_object(self):
         return User.objects.filter(pk=self.request.user.pk).first()
+
+
+class UserInfoUpdateView(generics.CreateAPIView):
+    serializer_class = UserInfoUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            user_id = request.user.id
+            try:
+                user = User.objects.get(id=user_id)  # Use get to retrieve a single user
+                cd = serializer.validated_data
+                for key, value in cd.items():
+                    setattr(user, key, value)  # Update user attributes
+                user.save()  # Save the user object
+                return Response(serializer.validated_data)
+            except User.DoesNotExist:
+                return Response({'error': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class UserPasswordUpdateView(generics.CreateAPIView):
+    serializer_class = UserPasswordUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = self.request.user
+            new_password = serializer.validated_data['password']
+            user.set_password(new_password)
+            user.save()
+            return Response({'detail': 'Password updated successfully.'}, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ResetUserPasswordView(generics.CreateAPIView):
+    serializer_class = ResetUserPasswordSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = User.objects.get(email=serializer.validated_data['email'])
+            if user:
+                password = serializer.validated_data['password']
+                
+                domain = get_current_site(self.request).domain
+                uid = urlsafe_base64_encode(force_bytes(user.id))
+                uid1 = urlsafe_base64_encode(force_bytes(password))
+                uid2 = urlsafe_base64_encode(force_bytes(now()))
+                token = account_activation_token.make_token(user)
+
+                mail_subject = 'Password Reset'
+                message = f'Click here to reset your password.\nhttp://{domain}/accounts/user-password-reset/confirm/{uid}/{uid1}/{uid2}/{token}' 
+                user.email_user(mail_subject, message)
+            return Response({'detail': 'We send your new password to your email.'}, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ResetUserPasswordConfirmView(generics.RetrieveAPIView):
+    serializer_class = None
+
+    def get_serializer_class(self):
+        return ''
+
+    def retrieve(self, request, *args, **kwargs):
+        uid = force_str(urlsafe_base64_decode(kwargs['uid']))
+        uid1 = force_str(urlsafe_base64_decode(kwargs['uid1']))
+        uid2 = force_str(urlsafe_base64_decode(kwargs['uid2']))
+        token = kwargs['token']
+        
+        user = User.objects.get(pk=int(uid))
+        if user:
+            if account_activation_token.check_token(user, token):
+                uid2_datetime = datetime.strptime(uid2, "%Y-%m-%d %H:%M:%S.%f%z")
+                current_datetime = now()
+                if  current_datetime - timedelta(hours=1) <= uid2_datetime <= current_datetime:
+                    user.set_password(uid1) 
+                    user.save()
+                    return Response({'Password changed successfully'}, status.HTTP_200_OK)
+                else:
+                    return Response({'Token expired'}, status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'Invalid token'}, status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'Bad request'}, status.HTTP_400_BAD_REQUEST)

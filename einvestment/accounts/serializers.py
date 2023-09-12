@@ -33,7 +33,22 @@ class UserLegalStatusSerializer(serializers.ModelSerializer):
         fields = ('is_physic',)
 
 
-class UserInfoSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'tin', 'first_name', 'last_name')
+
+    
+class UserInfoUpdateSerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=30, allow_null=True, allow_blank=True)
+    last_name = serializers.CharField(max_length=30, allow_null=True, allow_blank=True)
+    
+
+class UserPasswordUpdateSerializer(serializers.Serializer):
+    password = serializers.CharField(max_length=125, required=True)
+    
+
+class ResetUserPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(max_length=125, required=True)
+    
