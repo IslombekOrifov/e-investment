@@ -167,3 +167,11 @@ class UserLegalStatusView(generics.RetrieveAPIView):
 
     def get_object(self):
         return User.objects.filter(pk=self.request.user.pk).first()
+    
+
+class UserInfoView(generics.RetrieveAPIView):
+    serializer_class = UserLegalStatusSerializer
+    permissions = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return User.objects.filter(pk=self.request.user.pk).first()

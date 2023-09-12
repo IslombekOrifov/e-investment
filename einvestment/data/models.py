@@ -17,12 +17,19 @@ class Category(models.Model):
 
     def __str__(self):
         return self.category
+    
+
+class Area(models.Model):
+    location = models.CharField(max_length=150)
+
+    def __str__(self):
+        return self.location
 
 
 class MainData(models.Model):
     enterprise_name = models.CharField(max_length=30, default='')
     legal_form = models.CharField(max_length=30, default='')
-    #legal_address = models.CharField(max_length=30, default='')
+    location = models.ForeignKey(Area, on_delete=models.SET_NULL, related_name='main_data', blank=True, null=True, default=None)
     lat = models.DecimalField(max_digits=12, decimal_places=8, default=0)
     long = models.DecimalField(max_digits=12, decimal_places=8, default=0)
     field_of_activity = models.CharField(max_length=30, default='')

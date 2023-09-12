@@ -10,7 +10,7 @@ from .views import (
     MainDataDraftView, InformativeDataDraftView, FinancialDataDraftView, AllDataViewSet, ObjectIdAndCoordinatesViewSet,
     InvestorInfoView, InvestorInfoViewSet, AllDataUserViewSet, AllObjectInvestorsViewSet,
     AllDataAllUsersViewSet, CategoryListView, LocationView, ApproveRejectView, InvestorInfoOwnListView,
-    AllDataFilterView, AllDataFilterByLatLongDistanceView,
+    AllDataFilterView, AllDataFilterByLatLongDistanceView, AreaListView,
 )
 
 
@@ -39,6 +39,7 @@ urlpatterns = [
     #path('set-status-ready', SetReadyStatusView.as_view()),
     path('investor-info-create', InvestorInfoView.as_view()),
     path('category-list', CategoryListView.as_view()),
+    path('area-list', AreaListView.as_view()),
     path('location', LocationView.as_view()),
     path('approve-reject-investor', ApproveRejectView.as_view()),
     path('investor-info-own', InvestorInfoOwnListView.as_view()),

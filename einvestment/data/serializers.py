@@ -7,13 +7,13 @@ import uuid
 
 from .models import (
     MainData, InformativeData, FinancialData, ObjectPhoto, AllData,
-    InvestorInfo, Category,
+    InvestorInfo, Category, Area
 )
 
 class MainDataSerializer(serializers.Serializer):
     enterprise_name = serializers.CharField(max_length=30)
     legal_form = serializers.CharField(max_length=30)
-    #legal_address = serializers.CharField(max_length=30)
+    location = serializers.PrimaryKeyRelatedField(allow_null=True, queryset=Area.objects.all())
     lat = serializers.DecimalField(max_digits=12, decimal_places=8)
     long = serializers.DecimalField(max_digits=12, decimal_places=8)
     field_of_activity = serializers.CharField(max_length=30)
@@ -101,14 +101,24 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AreaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Area
+        fields = '__all__'
+
+
 class MainDataRetrieveSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
     class Meta:
         model = MainData
         fields = '__all__'
     
     def get_category(self, object):
         return object.category.category
+    
+    def get_location(self, object):
+        return object.location.location
 
 
 class InformativeDataRetrieveSerializer(serializers.ModelSerializer):
@@ -200,7 +210,7 @@ class AllDataFilterSerializer(serializers.ModelSerializer):
 class MainDataDraftSerializer(serializers.Serializer):
     enterprise_name = serializers.CharField(max_length=256, allow_null=True, allow_blank=True, default='')
     legal_form = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')
-    #legal_address = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')
+    location = serializers.PrimaryKeyRelatedField(allow_null=True, queryset=Area.objects.all())
     lat = serializers.DecimalField(max_digits=12, decimal_places=8, default=0)
     long = serializers.DecimalField(max_digits=12, decimal_places=8, default=0)
     field_of_activity = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')

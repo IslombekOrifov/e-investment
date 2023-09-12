@@ -13,14 +13,14 @@ from .serializers import (
     InvestorInfoSerializer, InvestorInfoGetSerializer, InvestorInfoGetMinimumSerializer,
     AllDataListSerializer, AllDataAllUsersListSerializer, CategorySerializer,
     LocationSerializer, ApproveRejectInvestorSerializer, InvestorInfoOwnSerializer,
-    AllDataFilterSerializer,
+    AllDataFilterSerializer, AreaSerializer
 )
 from .permissions import (
     IsLegal,
 )
 from .models import (
     Status, MainData, InformativeData, FinancialData, ObjectPhoto, AllData,
-    InvestorInfo, Category
+    InvestorInfo, Category, Area
 )
 from utils.logs import log
 
@@ -136,6 +136,12 @@ class MainDataDraftRetrieveView(generics.RetrieveAPIView):
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (permissions.AllowAny,)
+
+
+class AreaListView(generics.ListAPIView):
+    queryset = Area.objects.all()
+    serializer_class = AreaSerializer
     permission_classes = (permissions.AllowAny,)
 
 
@@ -460,6 +466,18 @@ class AllDataFilterView(generics.ListAPIView):
             for category in data['categories'].split(','):
                 category_list.append(int(category))
             queryset &= Q(main_data__category__pk__in=category_list)
+        if 'locations' in data:
+            location_list = []
+            for location in data['locations'].split(','):
+                location_list.append(int(location))
+            queryset &= Q(main_data__location__pk__in=location_list)
+        if 'startprice' in data and 'endprice' in data:                
+            queryset &= Q(financial_data__authorized_capital__gte=int(data['startprice']), financial_data__authorized_capital__lte=int(data['endprice']))
+        elif 'startprice' in data:                
+            queryset &= Q(financial_data__authorized_capital__gte=int(data['startprice']))
+        elif 'endprice' in data:                
+            queryset &= Q(financial_data__authorized_capital__lte=int(data['endprice']))
+        
         return AllData.objects.filter(queryset)
 
 

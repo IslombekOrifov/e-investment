@@ -31,3 +31,9 @@ class UserLegalStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('is_physic',)
+
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'tin', 'first_name', 'last_name')
