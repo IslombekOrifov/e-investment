@@ -14,8 +14,8 @@ class MainDataSerializer(serializers.Serializer):
     enterprise_name = serializers.CharField(max_length=30)
     legal_form = serializers.CharField(max_length=30)
     location = serializers.PrimaryKeyRelatedField(allow_null=True, queryset=Area.objects.all())
-    lat = serializers.DecimalField(max_digits=12, decimal_places=8)
-    long = serializers.DecimalField(max_digits=12, decimal_places=8)
+    lat = serializers.DecimalField(max_digits=34, decimal_places=30)
+    long = serializers.DecimalField(max_digits=34, decimal_places=30)
     field_of_activity = serializers.CharField(max_length=30)
     infrastructure = serializers.CharField(max_length=30)
     project_staff = serializers.DecimalField(max_digits=4, decimal_places=0)
@@ -211,8 +211,8 @@ class MainDataDraftSerializer(serializers.Serializer):
     enterprise_name = serializers.CharField(max_length=256, allow_null=True, allow_blank=True, default='')
     legal_form = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')
     location = serializers.PrimaryKeyRelatedField(allow_null=True, queryset=Area.objects.all())
-    lat = serializers.DecimalField(max_digits=12, decimal_places=8, default=0)
-    long = serializers.DecimalField(max_digits=12, decimal_places=8, default=0)
+    lat = serializers.DecimalField(max_digits=34, decimal_places=30, default=0)
+    long = serializers.DecimalField(max_digits=34, decimal_places=30, default=0)
     field_of_activity = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')
     infrastructure = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')
     project_staff = serializers.DecimalField(max_digits=4, decimal_places=0, default=0)
@@ -353,5 +353,5 @@ class AllDataAllUsersListSerializer(serializers.ModelSerializer):
 
 
 class LocationSerializer(serializers.Serializer):
-    lat = serializers.DecimalField(max_digits=12, decimal_places=8)
-    long = serializers.DecimalField(max_digits=12, decimal_places=8)
+    lat = serializers.DecimalField(max_digits=34, decimal_places=30)
+    long = serializers.DecimalField(max_digits=34, decimal_places=30)
