@@ -10,7 +10,8 @@ from .views import (
     MainDataDraftView, InformativeDataDraftView, FinancialDataDraftView, AllDataViewSet, ObjectIdAndCoordinatesViewSet,
     InvestorInfoView, InvestorInfoViewSet, AllDataUserViewSet, AllObjectInvestorsViewSet,
     AllDataAllUsersViewSet, CategoryListView, LocationView, ApproveRejectView, InvestorInfoOwnListView,
-    AllDataFilterView, AllDataFilterByLatLongDistanceView, AreaListView,
+    AllDataFilterView, AllDataFilterByLatLongDistanceView, AreaListView, SmartNoteCreateView,
+    SmartNoteListView, SmartNoteRetrieveView, SmartNoteDestroyView
 )
 
 
@@ -45,6 +46,10 @@ urlpatterns = [
     path('investor-info-own', InvestorInfoOwnListView.as_view()),
     path('all-data-filter', AllDataFilterView.as_view()),
     path('all-data-by-lat-long-distance-filter', AllDataFilterByLatLongDistanceView.as_view()),
+    path('smart-note-delete/<pk>', SmartNoteDestroyView.as_view()),
+    path('smart-note-get/<pk>', SmartNoteRetrieveView.as_view()),
+    path('smart-note-create', SmartNoteCreateView.as_view()),
+    path('smart-note-list', SmartNoteListView.as_view()),
 ]
 
 urlpatterns += router.urls

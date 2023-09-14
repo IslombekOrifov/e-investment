@@ -142,6 +142,14 @@ class InvestorInfo(models.Model):
 
 
 
+class SmartNote(models.Model):
+    main_data = models.ForeignKey(MainData, on_delete=models.CASCADE, related_name='smart_notes')
+    text = models.TextField(default='')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='smart_notes')
+
+    def __str__(self):
+        return self.user.email
+
 #If table not created
 #python3 manage.py migrate --fake app_name zero
 #Remove in the server all tables from models, views, serializers and cetera

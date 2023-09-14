@@ -7,7 +7,7 @@ import uuid
 
 from .models import (
     MainData, InformativeData, FinancialData, ObjectPhoto, AllData,
-    InvestorInfo, Category, Area
+    InvestorInfo, Category, Area, SmartNote
 )
 
 class MainDataSerializer(serializers.Serializer):
@@ -355,3 +355,22 @@ class AllDataAllUsersListSerializer(serializers.ModelSerializer):
 class LocationSerializer(serializers.Serializer):
     lat = serializers.DecimalField(max_digits=22, decimal_places=18)
     long = serializers.DecimalField(max_digits=22, decimal_places=18)
+
+
+class SmartNoteCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SmartNote
+        fields = ('main_data', 'text',)
+
+
+class SmartNoteMainDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MainData
+        fields = ('id', 'enterprise_name')
+
+
+class SmartNoteListRetrieveSerializer(serializers.ModelSerializer):
+    main_data = SmartNoteMainDataSerializer()
+    class Meta:
+        model = SmartNote
+        fields = ('main_data', 'text',)

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from .models import User
+from data.serializers import Base64ImageField
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -36,12 +37,13 @@ class UserLegalStatusSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'tin', 'first_name', 'last_name')
+        fields = ('email', 'tin', 'first_name', 'last_name', 'photo')
 
     
 class UserInfoUpdateSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=30, allow_null=True, allow_blank=True)
     last_name = serializers.CharField(max_length=30, allow_null=True, allow_blank=True)
+    photo = Base64ImageField(max_length=None, use_url=True, allow_null=True, default=None)
     
 
 class UserPasswordUpdateSerializer(serializers.Serializer):

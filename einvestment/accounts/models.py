@@ -35,6 +35,7 @@ class User(AbstractUser):
     #phone_num = PhoneNumberField('Phone number', unique=True, blank=True, null=True)
     username = None
     email = models.EmailField(('email address'), unique=True)
+    photo = models.ImageField(upload_to='files/users_photo/')
     tin = models.CharField(max_length=14, unique=True)
     is_physic = models.BooleanField(default=True)
 
