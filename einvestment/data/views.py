@@ -257,13 +257,27 @@ class MainDataDraftView(generics.CreateAPIView):
     permission_classes = (IsLegal,)
 
     def perform_create(self, serializer):
+        hasnot_instance = False
         instance = MainData.objects.filter(
             Q(user=self.request.user) &
             Q(all_data__status=Status.DRAFT)
         ).first()
+        if instance is None:
+            hasnot_instance = True
+            instance = MainData(user=self.request.user)
         for key, value in serializer.validated_data.items():
             setattr(instance, key, value)
         instance.save()
+        if hasnot_instance:
+            informdata = InformativeData(user=self.request.user)
+            informdata.save()
+            finandata = FinancialData(user=self.request.user)
+            finandata.save()
+            all_data = AllData(main_data=instance, informative_data=informdata, 
+                               financial_data=finandata, user=self.request.user,
+                               )
+            all_data.save()
+
 
 
 class InformativeDataDraftView(generics.CreateAPIView):
