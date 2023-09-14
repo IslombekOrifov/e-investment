@@ -11,7 +11,7 @@ from .views import (
     InvestorInfoView, InvestorInfoViewSet, AllDataUserViewSet, AllObjectInvestorsViewSet,
     AllDataAllUsersViewSet, CategoryListView, LocationView, ApproveRejectView, InvestorInfoOwnListView,
     AllDataFilterView, AllDataFilterByLatLongDistanceView, AreaListView, SmartNoteCreateView,
-    SmartNoteListView, SmartNoteRetrieveView, SmartNoteDestroyView
+    SmartNoteListView, SmartNoteRetrieveView, SmartNoteDestroyView, SmartNoteUpdateView
 )
 
 
@@ -47,6 +47,7 @@ urlpatterns = [
     path('all-data-filter', AllDataFilterView.as_view()),
     path('all-data-by-lat-long-distance-filter', AllDataFilterByLatLongDistanceView.as_view()),
     path('smart-note-delete/<pk>', SmartNoteDestroyView.as_view()),
+    path('smart-note-update/<pk>', SmartNoteUpdateView.as_view()),
     path('smart-note-get/<pk>', SmartNoteRetrieveView.as_view()),
     path('smart-note-create', SmartNoteCreateView.as_view()),
     path('smart-note-list', SmartNoteListView.as_view()),

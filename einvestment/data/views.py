@@ -14,6 +14,7 @@ from .serializers import (
     AllDataListSerializer, AllDataAllUsersListSerializer, CategorySerializer,
     LocationSerializer, ApproveRejectInvestorSerializer, InvestorInfoOwnSerializer,
     AllDataFilterSerializer, AreaSerializer, SmartNoteCreateSerializer, SmartNoteListRetrieveSerializer,
+    SmartNoteUpdateSerializer,
 )
 from .permissions import (
     IsLegal,
@@ -599,3 +600,25 @@ class SmartNoteDestroyView(generics.DestroyAPIView):
         if instance is not None:
             instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+class SmartNoteUpdateView(generics.CreateAPIView):
+    serializer_class = SmartNoteUpdateSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def perform_create(self, serializer):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        assert lookup_url_kwarg in self.kwargs, (
+            'Expected view %s to be called with a URL keyword argument '
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            'attribute on the view correctly.' %
+            (self.__class__.__name__, lookup_url_kwarg)
+        )
+
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        instance = SmartNote.objects.filter(user=self.request.user, **filter_kwargs).first()
+        if instance:
+            for key, value in serializer.validated_data.items():
+                setattr(instance, key, value)
+            instance.save()
