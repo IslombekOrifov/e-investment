@@ -188,22 +188,13 @@ class UserInfoUpdateView(generics.CreateAPIView):
     serializer_class = UserInfoUpdateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            user_id = request.user.id
-            try:
-                user = User.objects.get(id=user_id)  # Use get to retrieve a single user
-                cd = serializer.validated_data
-                for key, value in cd.items():
-                    setattr(user, key, value)  # Update user attributes
-                user.save()  # Save the user object
-                return Response(serializer.validated_data)
-            except User.DoesNotExist:
-                return Response({'error': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+    def perform_create(self, serializer):
+        user = User.objects.get(id=self.request.user.id)  # Use get to retrieve a single user
+        cd = serializer.validated_data
+        for key, value in cd.items():
+            setattr(user, key, value)  # Update user attributes
+        user.save()  # Save the user object
+             
 
 class UserPasswordUpdateView(generics.CreateAPIView):
     serializer_class = UserPasswordUpdateSerializer

@@ -373,4 +373,4 @@ class SmartNoteListRetrieveSerializer(serializers.ModelSerializer):
     main_data = SmartNoteMainDataSerializer()
     class Meta:
         model = SmartNote
-        fields = ('main_data', 'text',)
+        fields = ('id', 'main_data', 'text',)
