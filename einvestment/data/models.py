@@ -67,10 +67,10 @@ class ObjectPhoto(models.Model):
 
 
 class FinancialData(models.Model):
-    export_share = models.DecimalField(max_digits=3, decimal_places=0, default=0)
-    authorized_capital = models.DecimalField(max_digits=6, decimal_places=0, default=0)
-    estimated_value = models.DecimalField(max_digits=6, decimal_places=0, default=0)
-    investment_or_loan_amount = models.DecimalField(max_digits=6, decimal_places=0, default=0)
+    export_share = models.DecimalField(max_digits=18, decimal_places=4, default=0)
+    authorized_capital = models.DecimalField(max_digits=18, decimal_places=4, default=0)
+    estimated_value = models.DecimalField(max_digits=18, decimal_places=4, default=0)
+    investment_or_loan_amount = models.DecimalField(max_digits=18, decimal_places=4, default=0)
     investment_direction = models.CharField(max_length=30, default='')
     major_shareholders = models.CharField(max_length=30, default='')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='financial_data')
@@ -143,7 +143,8 @@ class InvestorInfo(models.Model):
 
 
 class SmartNote(models.Model):
-    main_data = models.ForeignKey(MainData, on_delete=models.CASCADE, related_name='smart_notes')
+    main_data = models.ForeignKey(MainData, on_delete=models.CASCADE, related_name='smart_notes', blank=True, null=True)
+    name = models.CharField(max_length=128, blank=True, null=True)
     text = models.TextField(default='')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='smart_notes')
 

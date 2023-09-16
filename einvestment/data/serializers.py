@@ -87,10 +87,10 @@ class InformativeDataSerializer(serializers.Serializer):
 
 
 class FinancialDataSerializer(serializers.Serializer):
-    export_share = serializers.DecimalField(max_digits=3, decimal_places=0)
-    authorized_capital = serializers.DecimalField(max_digits=6, decimal_places=0)
-    estimated_value = serializers.DecimalField(max_digits=6, decimal_places=0)
-    investment_or_loan_amount = serializers.DecimalField(max_digits=6, decimal_places=0)
+    export_share = serializers.DecimalField(max_digits=18, decimal_places=4)
+    authorized_capital = serializers.DecimalField(max_digits=18, decimal_places=4)
+    estimated_value = serializers.DecimalField(max_digits=18, decimal_places=4)
+    investment_or_loan_amount = serializers.DecimalField(max_digits=18, decimal_places=4)
     investment_direction = serializers.CharField(max_length=30)
     major_shareholders = serializers.CharField(max_length=30)
 
@@ -233,10 +233,10 @@ class InformativeDataDraftSerializer(serializers.Serializer):
 
 
 class FinancialDataDraftSerializer(serializers.Serializer):
-    export_share = serializers.DecimalField(max_digits=3, decimal_places=0, default=0)
-    authorized_capital = serializers.DecimalField(max_digits=6, decimal_places=0, default=0)
-    estimated_value = serializers.DecimalField(max_digits=6, decimal_places=0, default=0)
-    investment_or_loan_amount = serializers.DecimalField(max_digits=6, decimal_places=0, default=0)
+    export_share = serializers.DecimalField(max_digits=18, decimal_places=4, default=0)
+    authorized_capital = serializers.DecimalField(max_digits=18, decimal_places=4, default=0)
+    estimated_value = serializers.DecimalField(max_digits=18, decimal_places=4, default=0)
+    investment_or_loan_amount = serializers.DecimalField(max_digits=18, decimal_places=4, default=0)
     investment_direction = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')
     major_shareholders = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')
 
@@ -360,7 +360,7 @@ class LocationSerializer(serializers.Serializer):
 class SmartNoteCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = SmartNote
-        fields = ('main_data', 'text',)
+        fields = ('main_data', 'text', 'name')
 
 
 class SmartNoteMainDataSerializer(serializers.ModelSerializer):
@@ -373,10 +373,10 @@ class SmartNoteListRetrieveSerializer(serializers.ModelSerializer):
     main_data = SmartNoteMainDataSerializer()
     class Meta:
         model = SmartNote
-        fields = ('id', 'main_data', 'text',)
+        fields = ('id', 'main_data', 'text', 'name')
 
 
 class SmartNoteUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = SmartNote
-        fields = ('text',)
+        fields = ('text', 'name')

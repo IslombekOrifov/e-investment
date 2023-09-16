@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from . models import (
     MainData, InformativeData, FinancialData, ObjectPhoto, Status, AllData,
-    InvestorInfo, Category, Area
+    InvestorInfo, Category, Area, SmartNote
 )
 
 
@@ -46,3 +46,6 @@ admin.site.register(ObjectPhoto)
 admin.site.register(InvestorInfo)
 admin.site.register(Category)
 admin.site.register(Area)
+
+
+admin.site.register(SmartNote)
