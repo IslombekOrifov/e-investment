@@ -11,7 +11,8 @@ from .views import (
     InvestorInfoView, InvestorInfoViewSet, AllDataUserViewSet, AllObjectInvestorsViewSet,
     AllDataAllUsersViewSet, CategoryListView, LocationView, ApproveRejectView, InvestorInfoOwnListView,
     AllDataFilterView, AllDataFilterByLatLongDistanceView, AreaListView, SmartNoteCreateView,
-    SmartNoteListView, SmartNoteRetrieveView, SmartNoteDestroyView, SmartNoteUpdateView
+    SmartNoteListView, SmartNoteRetrieveView, SmartNoteDestroyView, SmartNoteUpdateView,
+    CurrencyListView,
 )
 
 
@@ -40,6 +41,7 @@ urlpatterns = [
     #path('set-status-ready', SetReadyStatusView.as_view()),
     path('investor-info-create', InvestorInfoView.as_view()),
     path('category-list', CategoryListView.as_view()),
+    path('currency-list', CurrencyListView.as_view()),
     path('area-list', AreaListView.as_view()),
     path('location', LocationView.as_view()),
     path('approve-reject-investor', ApproveRejectView.as_view()),

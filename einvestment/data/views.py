@@ -14,14 +14,14 @@ from .serializers import (
     AllDataListSerializer, AllDataAllUsersListSerializer, CategorySerializer,
     LocationSerializer, ApproveRejectInvestorSerializer, InvestorInfoOwnSerializer,
     AllDataFilterSerializer, AreaSerializer, SmartNoteCreateSerializer, SmartNoteListRetrieveSerializer,
-    SmartNoteUpdateSerializer
+    SmartNoteUpdateSerializer, CurrencySerializer
 )
 from .permissions import (
     IsLegal,
 )
 from .models import (
     Status, MainData, InformativeData, FinancialData, ObjectPhoto, AllData,
-    InvestorInfo, Category, Area, SmartNote, CurrencyPrice
+    InvestorInfo, Category, Area, SmartNote, CurrencyPrice, Currency
 )
 from utils.logs import log
 
@@ -143,6 +143,12 @@ class CategoryListView(generics.ListAPIView):
 class AreaListView(generics.ListAPIView):
     queryset = Area.objects.all()
     serializer_class = AreaSerializer
+    permission_classes = (permissions.AllowAny,)
+
+
+class CurrencyListView(generics.ListAPIView):
+    queryset = Currency.objects.all()
+    serializer_class = CurrencySerializer
     permission_classes = (permissions.AllowAny,)
 
 
