@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'phonenumber_field',
     'drf_yasg',
     'corsheaders',
+    'django_crontab',
 
     'oauth2_provider',
     'social_django',
@@ -248,3 +249,7 @@ SIMPLE_JWT = {
 
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+CRONJOBS = [
+    ('9 40 * * *', 'data.cron.my_scheduled_currency')
+]

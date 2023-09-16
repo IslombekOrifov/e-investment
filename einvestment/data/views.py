@@ -1,6 +1,6 @@
 from rest_framework import generics, status, permissions, views, mixins, viewsets
 from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, F, DecimalField, Subquery
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -14,14 +14,14 @@ from .serializers import (
     AllDataListSerializer, AllDataAllUsersListSerializer, CategorySerializer,
     LocationSerializer, ApproveRejectInvestorSerializer, InvestorInfoOwnSerializer,
     AllDataFilterSerializer, AreaSerializer, SmartNoteCreateSerializer, SmartNoteListRetrieveSerializer,
-    SmartNoteUpdateSerializer,
+    SmartNoteUpdateSerializer
 )
 from .permissions import (
     IsLegal,
 )
 from .models import (
     Status, MainData, InformativeData, FinancialData, ObjectPhoto, AllData,
-    InvestorInfo, Category, Area, SmartNote
+    InvestorInfo, Category, Area, SmartNote, CurrencyPrice
 )
 from utils.logs import log
 
@@ -486,14 +486,30 @@ class AllDataFilterView(generics.ListAPIView):
             for location in data['locations'].split(','):
                 location_list.append(int(location))
             queryset &= Q(main_data__location__pk__in=location_list)
-        if 'startprice' in data and 'endprice' in data:                
-            queryset &= Q(financial_data__authorized_capital__gte=int(data['startprice']), financial_data__authorized_capital__lte=int(data['endprice']))
-        elif 'startprice' in data:                
-            queryset &= Q(financial_data__authorized_capital__gte=int(data['startprice']))
-        elif 'endprice' in data:                
-            queryset &= Q(financial_data__authorized_capital__lte=int(data['endprice']))
-        
-        return AllData.objects.filter(queryset)
+        if 'startprice' in data and 'endprice' in data:     
+            if int(data['endprice']) == 0 :           
+                queryset &= Q(new_price_dollar__gte=int(data['startprice']))
+            elif int(data['startprice']) == 0:                
+                queryset &= Q(new_price_dollar__lte=int(data['endprice']))
+            else:
+                queryset &= Q(new_price_dollar__gte=int(data['startprice']), new_price_dollar__lte=int(data['endprice']))
+                        
+        datas = AllData.objects.annotate(
+            latest_gbp_price=Subquery(CurrencyPrice.objects.filter(code='EUR').order_by('-date').values('cb_price')[:1], output_field=DecimalField(max_digits=18, decimal_places=2)),
+            latest_eur_price=Subquery(CurrencyPrice.objects.filter(code='EUR').order_by('-date').values('cb_price')[:1], output_field=DecimalField(max_digits=18, decimal_places=2)),
+            latest_uzs_price=1.00,
+            latest_usd_price=Subquery(CurrencyPrice.objects.filter(code='USD').order_by('-date').values('cb_price')[:1], output_field=DecimalField(max_digits=18, decimal_places=2)),
+        ).annotate(
+            new_price_dollar=Case(
+                When(financial_data__currency__code='GBP', then=F('financial_data__authorized_capital') * F('latest_gbp_price') / F('latest_usd_price')),
+                When(financial_data__currency__code='EUR', then=F('financial_data__authorized_capital') * F('latest_eur_price') / F('latest_usd_price')),
+                When(financial_data__currency__code='UZS', then=F('financial_data__authorized_capital') * F('latest_uzs_price') / F('latest_usd_price')),
+                When(financial_data__currency__code='USD', then=F('financial_data__authorized_capital') * F('latest_usd_price') / F('latest_usd_price')),
+                default=F('financial_data__authorized_capital'),
+                output_field=DecimalField(max_digits=18, decimal_places=2)
+            )
+        ).filter(queryset)
+        return datas
 
 
 import math

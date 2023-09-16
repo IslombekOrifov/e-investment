@@ -26,6 +26,33 @@ class Area(models.Model):
         return self.location
 
 
+class Currency(models.Model):
+    code = models.CharField(max_length=4)
+    name = models.CharField(max_length=30)
+
+    def save(self, *args, **kwargs):
+        existing_count = AllData.objects.count()
+
+        if existing_count >= 4:
+            return
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.code
+    
+
+class CurrencyPrice(models.Model):
+    code = models.CharField(max_length=4)
+    name = models.CharField(max_length=30)
+    cb_price = models.DecimalField(max_digits=12, decimal_places=2)
+    date = models.DateField()
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='prices')
+
+    def __str__(self):
+        return self.code
+    
+
 class MainData(models.Model):
     enterprise_name = models.CharField(max_length=30, default='')
     legal_form = models.CharField(max_length=30, default='')
@@ -73,6 +100,7 @@ class FinancialData(models.Model):
     investment_or_loan_amount = models.DecimalField(max_digits=18, decimal_places=4, default=0)
     investment_direction = models.CharField(max_length=30, default='')
     major_shareholders = models.CharField(max_length=30, default='')
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='financial_data')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='financial_data')
 
     is_validated = models.BooleanField(default=False)

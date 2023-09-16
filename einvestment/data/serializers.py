@@ -7,7 +7,7 @@ import uuid
 
 from .models import (
     MainData, InformativeData, FinancialData, ObjectPhoto, AllData,
-    InvestorInfo, Category, Area, SmartNote
+    InvestorInfo, Category, Area, SmartNote, Currency
 )
 
 class MainDataSerializer(serializers.Serializer):
@@ -93,6 +93,7 @@ class FinancialDataSerializer(serializers.Serializer):
     investment_or_loan_amount = serializers.DecimalField(max_digits=18, decimal_places=4)
     investment_direction = serializers.CharField(max_length=30)
     major_shareholders = serializers.CharField(max_length=30)
+    currency = serializers.IntegerField()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -104,6 +105,12 @@ class CategorySerializer(serializers.ModelSerializer):
 class AreaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Area
+        fields = '__all__'
+
+
+class CurrencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Currency
         fields = '__all__'
 
 
@@ -140,6 +147,16 @@ class InformativeDataRetrieveSerializer(serializers.ModelSerializer):
         )
 
 
+class FinancialDataRetrieveCustomSerializer(serializers.ModelSerializer):
+    currency = serializers.SerializerMethodField()
+    class Meta:
+        model = FinancialData
+        fields = '__all__'
+    
+    def get_currency(self, object):
+        return object.currency.code
+    
+
 class FinancialDataRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = FinancialData
@@ -149,7 +166,7 @@ class FinancialDataRetrieveSerializer(serializers.ModelSerializer):
 class AllDataSerializer(serializers.ModelSerializer):
     main_data = MainDataRetrieveSerializer()
     informative_data = InformativeDataRetrieveSerializer()
-    financial_data = FinancialDataRetrieveSerializer()
+    financial_data = FinancialDataRetrieveCustomSerializer()
     class Meta:
         model = AllData
         fields = (
@@ -239,6 +256,7 @@ class FinancialDataDraftSerializer(serializers.Serializer):
     investment_or_loan_amount = serializers.DecimalField(max_digits=18, decimal_places=4, default=0)
     investment_direction = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')
     major_shareholders = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')
+    currency = serializers.IntegerField()
 
 
 # class InvestmentDraftSerializer(serializers.Serializer):

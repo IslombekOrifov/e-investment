@@ -16,6 +16,7 @@ RUN python3 -m pip install --upgrade pip
 #RUN apt-get install ffmpeg libsm6 libxext6 -y
 
 RUN python3 -m pip install -r requirements.txt
+RUN pip3 install django-crontab
 #RUN pip3 install requests-toolbelt
 #RUN pip3 install requests-async
 #RUN pip3 install aiohttp
