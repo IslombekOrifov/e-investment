@@ -46,7 +46,7 @@ class CurrencyPrice(models.Model):
     code = models.CharField(max_length=4)
     name = models.CharField(max_length=30)
     cb_price = models.DecimalField(max_digits=12, decimal_places=2)
-    date = models.DateField()
+    date = models.DateField(auto_now=True)
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name='prices')
 
     def __str__(self):
