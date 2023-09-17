@@ -574,7 +574,7 @@ class SmartNoteCreateView(generics.CreateAPIView):
         custom_id = serializer.validated_data.get('custom_id')
         if self.request.user.is_authenticated:
             instance = SmartNote(user=self.request.user)
-            if custom_id:
+            if custom_id != '':
                 notes = SmartNote.objects.filter(
                     custom_id=serializer.validated_data['custom_id'],
                     user__isnull=True
@@ -582,12 +582,12 @@ class SmartNoteCreateView(generics.CreateAPIView):
                 if notes.exists():
                     notes.update(user=self.request.user)
         else:
-            if custom_id is None:
+            if custom_id == '':
                 custom_id = str(uuid4())[-12:]
             instance = SmartNote(custom_id=custom_id)
         for key, value in serializer.validated_data.items():
             setattr(instance, key, value)
-        if custom_id:
+        if custom_id != '':
             instance.custom_id = custom_id
         instance.save()
         data_for_return = SmartNoteCreateSerializer(instance)
@@ -607,7 +607,7 @@ class SmartNoteListView(generics.ListAPIView):
             serializer = CustomIdSerializer(data=self.request.data)
             serializer.is_valid(raise_exception=True)
             custom_id = serializer.validated_data.get('custom_id')
-            if custom_id:
+            if custom_id != '':
                 datas = SmartNote.objects.filter(custom_id=custom_id).select_related('main_data')
             else:
                 datas=None
@@ -636,7 +636,7 @@ class SmartNoteRetrieveView(generics.RetrieveAPIView):
             serializer = CustomIdSerializer(data=self.request.data)
             serializer.is_valid(raise_exception=True)
             custom_id = serializer.validated_data.get('custom_id')
-            if custom_id:
+            if custom_id != '':
                 queryset = Q(custom_id=custom_id)
             else:
                 queryset = Q(user__id=-985)
@@ -663,7 +663,7 @@ class SmartNoteDestroyView(generics.DestroyAPIView):
             serializer = CustomIdSerializer(data=self.request.data)
             serializer.is_valid(raise_exception=True)
             custom_id = serializer.validated_data.get('custom_id')
-            if custom_id:
+            if custom_id != '':
                 queryset = Q(custom_id=custom_id)
             else:
                 queryset = Q(user__id=-985)
@@ -693,7 +693,7 @@ class SmartNoteUpdateView(generics.CreateAPIView):
             queryset = Q(user=self.request.user)
         else:
             custom_id = serializer.validated_data.get('custom_id')
-            if custom_id:
+            if custom_id != '':
                 queryset = Q(custom_id=custom_id)
             else:
                 queryset = Q(user__id=-985)
