@@ -1,9 +1,10 @@
 from rest_framework import generics, status, permissions, views, mixins, viewsets
 from rest_framework.response import Response
-from django.db.models import Q, Case, When, Value, F, DecimalField, Subquery
+from django.db.models import Q, Case, When, Value, F, DecimalField, Subquery, Coalesce
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from uuid import uuid4
 
 from .serializers import (
     MainDataSerializer, InformativeDataSerializer, FinancialDataSerializer, ObjectPhotoSerializer,
@@ -14,7 +15,7 @@ from .serializers import (
     AllDataListSerializer, AllDataAllUsersListSerializer, CategorySerializer,
     LocationSerializer, ApproveRejectInvestorSerializer, InvestorInfoOwnSerializer,
     AllDataFilterSerializer, AreaSerializer, SmartNoteCreateSerializer, SmartNoteListRetrieveSerializer,
-    SmartNoteUpdateSerializer, CurrencySerializer
+    SmartNoteUpdateSerializer, CurrencySerializer, CustomIdSerializer
 )
 from .permissions import (
     IsLegal,
@@ -278,7 +279,7 @@ class MainDataDraftView(generics.CreateAPIView):
         if hasnot_instance:
             informdata = InformativeData(user=self.request.user)
             informdata.save()
-            finandata = FinancialData(user=self.request.user)
+            finandata = FinancialData(user=self.request.user, currecy=Currency.objects.first())
             finandata.save()
             all_data = AllData(main_data=instance, informative_data=informdata, 
                                financial_data=finandata, user=self.request.user,
@@ -493,23 +494,19 @@ class AllDataFilterView(generics.ListAPIView):
                 location_list.append(int(location))
             queryset &= Q(main_data__location__pk__in=location_list)
         if 'startprice' in data and 'endprice' in data:     
-            if int(data['endprice']) == 0 :           
-                queryset &= Q(new_price_dollar__gte=int(data['startprice']))
-            elif int(data['startprice']) == 0:                
-                queryset &= Q(new_price_dollar__lte=int(data['endprice']))
-            else:
-                queryset &= Q(new_price_dollar__gte=int(data['startprice']), new_price_dollar__lte=int(data['endprice']))
-                        
+            queryset &= Q(new_price_dollar__gte=int(data['startprice']), new_price_dollar__lte=int(data['endprice']))
+        elif int(data['startprice']) == 100000:                
+            queryset &= Q(new_price_dollar__gte=int(data['startprice']))
+
         datas = AllData.objects.annotate(
             latest_gbp_price=Subquery(CurrencyPrice.objects.filter(code='EUR').order_by('-date').values('cb_price')[:1], output_field=DecimalField(max_digits=18, decimal_places=2)),
             latest_eur_price=Subquery(CurrencyPrice.objects.filter(code='EUR').order_by('-date').values('cb_price')[:1], output_field=DecimalField(max_digits=18, decimal_places=2)),
-            latest_uzs_price=1.00,
             latest_usd_price=Subquery(CurrencyPrice.objects.filter(code='USD').order_by('-date').values('cb_price')[:1], output_field=DecimalField(max_digits=18, decimal_places=2)),
         ).annotate(
             new_price_dollar=Case(
                 When(financial_data__currency__code='GBP', then=F('financial_data__authorized_capital') * F('latest_gbp_price') / F('latest_usd_price')),
                 When(financial_data__currency__code='EUR', then=F('financial_data__authorized_capital') * F('latest_eur_price') / F('latest_usd_price')),
-                When(financial_data__currency__code='UZS', then=F('financial_data__authorized_capital') * F('latest_uzs_price') / F('latest_usd_price')),
+                When(financial_data__currency__code='UZS', then=F('financial_data__authorized_capital') / F('latest_usd_price')),
                 When(financial_data__currency__code='USD', then=F('financial_data__authorized_capital') * F('latest_usd_price') / F('latest_usd_price')),
                 default=F('financial_data__authorized_capital'),
                 output_field=DecimalField(max_digits=18, decimal_places=2)
@@ -569,27 +566,58 @@ class AllDataFilterByLatLongDistanceView(generics.ListAPIView):
 
 class SmartNoteCreateView(generics.CreateAPIView):
     serializer_class = SmartNoteCreateSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
     
-    def perform_create(self, serializer):
-        instance = SmartNote(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        custom_id = serializer.validated_data.get('custom_id')
+        if self.request.user.is_authenticated:
+            instance = SmartNote(user=self.request.user)
+            if custom_id:
+                notes = SmartNote.objects.filter(
+                    custom_id=serializer.validated_data['custom_id'],
+                    user__isnull=True
+                )
+                if notes.exists():
+                    notes.update(user=self.request.user)
+        else:
+            if custom_id is None:
+                custom_id = str(uuid4())[-12:]
+            instance = SmartNote(custom_id=custom_id)
         for key, value in serializer.validated_data.items():
             setattr(instance, key, value)
+        if custom_id:
+            instance.custom_id = custom_id
         instance.save()
-
+        data_for_return = SmartNoteCreateSerializer(instance)
+        headers = self.get_success_headers(serializer.data)
+        return Response(data_for_return.data, status=status.HTTP_201_CREATED, headers=headers)
+        
 
 class SmartNoteListView(generics.ListAPIView):
     queryset = SmartNote.objects.all()
     serializer_class = SmartNoteListRetrieveSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
 
     def get_queryset(self):
-        return SmartNote.objects.filter(user=self.request.user).select_related('main_data')
+        if self.request.user.is_authenticated:
+            datas = SmartNote.objects.filter(user=self.request.user).select_related('main_data')
+        else:
+            serializer = CustomIdSerializer(data=self.request.data)
+            serializer.is_valid(raise_exception=True)
+            custom_id = serializer.validated_data.get('custom_id')
+            if custom_id:
+                datas = SmartNote.objects.filter(custom_id=custom_id).select_related('main_data')
+            else:
+                datas=None
+        return datas
+    
     
 
 class SmartNoteRetrieveView(generics.RetrieveAPIView):
     serializer_class = SmartNoteListRetrieveSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
 
     def get_object(self):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -601,11 +629,22 @@ class SmartNoteRetrieveView(generics.RetrieveAPIView):
         )
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-        return SmartNote.objects.filter(user=self.request.user, **filter_kwargs).select_related('main_data').first()
+        queryset = Q(status=Status.APPROVED)
+        if self.request.user.is_authenticated:
+            queryset = Q(user=self.request.user)
+        else:
+            serializer = CustomIdSerializer(data=self.request.data)
+            serializer.is_valid(raise_exception=True)
+            custom_id = serializer.validated_data.get('custom_id')
+            if custom_id:
+                queryset = Q(custom_id=custom_id)
+            else:
+                queryset = Q(user__id=-985)
+        return SmartNote.objects.filter(queryset, **filter_kwargs).select_related('main_data').first()    
 
 
 class SmartNoteDestroyView(generics.DestroyAPIView):
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
 
     def destroy(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -618,7 +657,17 @@ class SmartNoteDestroyView(generics.DestroyAPIView):
         )
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-        instance = SmartNote.objects.filter(user=self.request.user, **filter_kwargs).first()
+        if self.request.user.is_authenticated:
+            queryset = Q(user=self.request.user)
+        else:
+            serializer = CustomIdSerializer(data=self.request.data)
+            serializer.is_valid(raise_exception=True)
+            custom_id = serializer.validated_data.get('custom_id')
+            if custom_id:
+                queryset = Q(custom_id=custom_id)
+            else:
+                queryset = Q(user__id=-985)
+        instance = SmartNote.objects.filter(queryset, **filter_kwargs).first()
         if instance is not None:
             instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -626,7 +675,7 @@ class SmartNoteDestroyView(generics.DestroyAPIView):
 
 class SmartNoteUpdateView(generics.CreateAPIView):
     serializer_class = SmartNoteUpdateSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
     
     def perform_create(self, serializer):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -639,7 +688,16 @@ class SmartNoteUpdateView(generics.CreateAPIView):
         )
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-        instance = SmartNote.objects.filter(user=self.request.user, **filter_kwargs).first()
+        
+        if self.request.user.is_authenticated:
+            queryset = Q(user=self.request.user)
+        else:
+            custom_id = serializer.validated_data.get('custom_id')
+            if custom_id:
+                queryset = Q(custom_id=custom_id)
+            else:
+                queryset = Q(user__id=-985)
+        instance = SmartNote.objects.filter(queryset, **filter_kwargs).first()
         if instance:
             for key, value in serializer.validated_data.items():
                 setattr(instance, key, value)

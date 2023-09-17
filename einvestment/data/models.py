@@ -174,7 +174,8 @@ class SmartNote(models.Model):
     main_data = models.ForeignKey(MainData, on_delete=models.CASCADE, related_name='smart_notes', blank=True, null=True)
     name = models.CharField(max_length=128, blank=True, null=True)
     text = models.TextField(default='')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='smart_notes')
+    custom_id = models.CharField(max_length=30, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='smart_notes', blank=True, null=True)
 
     def __str__(self):
         return self.user.email

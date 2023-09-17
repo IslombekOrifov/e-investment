@@ -93,7 +93,7 @@ class FinancialDataSerializer(serializers.Serializer):
     investment_or_loan_amount = serializers.DecimalField(max_digits=18, decimal_places=4)
     investment_direction = serializers.CharField(max_length=30)
     major_shareholders = serializers.CharField(max_length=30)
-    currency = serializers.IntegerField()
+    currency = serializers.PrimaryKeyRelatedField(queryset=Currency.objects.all())
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -256,7 +256,7 @@ class FinancialDataDraftSerializer(serializers.Serializer):
     investment_or_loan_amount = serializers.DecimalField(max_digits=18, decimal_places=4, default=0)
     investment_direction = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')
     major_shareholders = serializers.CharField(max_length=30, allow_null=True, allow_blank=True, default='')
-    currency = serializers.IntegerField()
+    currency = serializers.PrimaryKeyRelatedField(queryset=Currency.objects.all())
 
 
 # class InvestmentDraftSerializer(serializers.Serializer):
@@ -378,10 +378,11 @@ class LocationSerializer(serializers.Serializer):
 class SmartNoteCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = SmartNote
-        fields = ('main_data', 'text', 'name')
+        fields = ('id', 'main_data', 'text', 'name', 'custom_id')
 
 
 class SmartNoteMainDataSerializer(serializers.ModelSerializer):
+    enterprise_name = serializers.CharField(source='main_data.enterprise_name', read_only=True)
     class Meta:
         model = MainData
         fields = ('id', 'enterprise_name')
@@ -389,12 +390,25 @@ class SmartNoteMainDataSerializer(serializers.ModelSerializer):
 
 class SmartNoteListRetrieveSerializer(serializers.ModelSerializer):
     main_data = SmartNoteMainDataSerializer()
+    enterprise_name = serializers.SerializerMethodField()
+
     class Meta:
         model = SmartNote
-        fields = ('id', 'main_data', 'text', 'name')
+        fields = ('id', 'enterprise_name', 'main_data', 'text', 'name', 'custom_id')
+
+    def get_enterprise_name(self, object):
+        main_data = object.main_data
+        if main_data and main_data.enterprise_name:
+            return main_data.enterprise_name
+        else:
+            return None
 
 
 class SmartNoteUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = SmartNote
-        fields = ('text', 'name')
+        fields = ('text', 'name', 'custom_id')
+
+
+class CustomIdSerializer(serializers.Serializer):
+    custom_id = serializers.CharField(max_length=30, allow_null=True, allow_blank=True)
