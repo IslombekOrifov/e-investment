@@ -1,6 +1,6 @@
 from rest_framework import generics, status, permissions, views, mixins, viewsets
 from rest_framework.response import Response
-from django.db.models import Q, Case, When, Value, F, DecimalField, Subquery, Coalesce
+from django.db.models import Q, Case, When, Value, F, DecimalField, Subquery
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -113,6 +113,7 @@ class FinancialDataView(generics.CreateAPIView):
                 )
                 financial_data = FinancialData.objects.create(
                     user=self.request.user,
+                    currency=Currency.objects.first()
                 )
                 AllData.objects.create(
                     main_data=main_data,
@@ -600,26 +601,32 @@ class SmartNoteListView(generics.ListAPIView):
     serializer_class = SmartNoteListRetrieveSerializer
     permission_classes = (permissions.AllowAny,)
 
-    def get_queryset(self):
+    def post(self, request, *args, **kwargs):
+        serializer = CustomIdSerializer(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
         if self.request.user.is_authenticated:
             datas = SmartNote.objects.filter(user=self.request.user).select_related('main_data')
         else:
-            serializer = CustomIdSerializer(data=self.request.data)
-            serializer.is_valid(raise_exception=True)
             custom_id = serializer.validated_data.get('custom_id')
             if custom_id != '':
                 datas = SmartNote.objects.filter(custom_id=custom_id).select_related('main_data')
             else:
                 datas=None
-        return datas
+
+        serializer_info = SmartNoteListRetrieveSerializer(datas, many=True)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer_info.data, status=status.HTTP_200_OK, headers=headers)
     
     
 
-class SmartNoteRetrieveView(generics.RetrieveAPIView):
+class SmartNoteRetrieveView(generics.CreateAPIView):
     serializer_class = SmartNoteListRetrieveSerializer
     permission_classes = (permissions.AllowAny,)
 
-    def get_object(self):
+    def post(self, request, *args, **kwargs):
+        serializer = CustomIdSerializer(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         assert lookup_url_kwarg in self.kwargs, (
             'Expected view %s to be called with a URL keyword argument '
@@ -633,20 +640,26 @@ class SmartNoteRetrieveView(generics.RetrieveAPIView):
         if self.request.user.is_authenticated:
             queryset = Q(user=self.request.user)
         else:
-            serializer = CustomIdSerializer(data=self.request.data)
-            serializer.is_valid(raise_exception=True)
             custom_id = serializer.validated_data.get('custom_id')
             if custom_id != '':
                 queryset = Q(custom_id=custom_id)
             else:
                 queryset = Q(user__id=-985)
-        return SmartNote.objects.filter(queryset, **filter_kwargs).select_related('main_data').first()    
+        datas = SmartNote.objects.filter(queryset, **filter_kwargs).select_related('main_data').first()    
+        
+        serializer_info = SmartNoteListRetrieveSerializer(datas)
 
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer_info.data, status=status.HTTP_200_OK, headers=headers)
+    
 
-class SmartNoteDestroyView(generics.DestroyAPIView):
+class SmartNoteDestroyView(generics.CreateAPIView):
     permission_classes = (permissions.AllowAny,)
+    serializer_class = CustomIdSerializer
 
-    def destroy(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
+        serializer = CustomIdSerializer(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
         assert lookup_url_kwarg in self.kwargs, (
@@ -660,8 +673,6 @@ class SmartNoteDestroyView(generics.DestroyAPIView):
         if self.request.user.is_authenticated:
             queryset = Q(user=self.request.user)
         else:
-            serializer = CustomIdSerializer(data=self.request.data)
-            serializer.is_valid(raise_exception=True)
             custom_id = serializer.validated_data.get('custom_id')
             if custom_id != '':
                 queryset = Q(custom_id=custom_id)
@@ -677,9 +688,10 @@ class SmartNoteUpdateView(generics.CreateAPIView):
     serializer_class = SmartNoteUpdateSerializer
     permission_classes = (permissions.AllowAny,)
     
-    def perform_create(self, serializer):
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-
         assert lookup_url_kwarg in self.kwargs, (
             'Expected view %s to be called with a URL keyword argument '
             'named "%s". Fix your URL conf, or set the `.lookup_field` '
@@ -702,3 +714,8 @@ class SmartNoteUpdateView(generics.CreateAPIView):
             for key, value in serializer.validated_data.items():
                 setattr(instance, key, value)
             instance.save()
+
+        serializer_info = SmartNoteUpdateSerializer(instance)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer_info.data, status=status.HTTP_200_OK, headers=headers)
+    
