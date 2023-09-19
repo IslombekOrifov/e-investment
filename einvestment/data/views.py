@@ -227,6 +227,33 @@ class AllDataAllUsersViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mix
         return self.serializer_classes.get(self.action, self.default_serializer_class)
 
 
+class CustomAlldataAllUsersListView(generics.ListAPIView):
+    queryset = AllData.objects.filter(Q(status=Status.APPROVED))
+    serializer_class = AllDataAllUsersListSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def list(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        assert lookup_url_kwarg in self.kwargs, (
+            'Expected view %s to be called with a URL keyword argument '
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            'attribute on the view correctly.' %
+            (self.__class__.__name__, lookup_url_kwarg)
+        )
+        filter_kwargs = {'main_data__category__id': self.kwargs[lookup_url_kwarg]}
+        queryset = self.queryset.filter(**filter_kwargs)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+
+
 # class MainDataApprovedRetrieveView(generics.RetrieveAPIView):
 #     serializer_class = MainDataRetrieveSerializer
 #     permission_classes = (IsLegal,)
@@ -478,7 +505,7 @@ categories = openapi.Parameter(
 ]))
 class AllDataFilterView(generics.ListAPIView):
     serializer_class = AllDataFilterSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.AllowAny,)
     #pagination_class = TenPagesPagination
 
     def get_queryset(self):

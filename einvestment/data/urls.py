@@ -12,7 +12,7 @@ from .views import (
     AllDataAllUsersViewSet, CategoryListView, LocationView, ApproveRejectView, InvestorInfoOwnListView,
     AllDataFilterView, AllDataFilterByLatLongDistanceView, AreaListView, SmartNoteCreateView,
     SmartNoteListView, SmartNoteRetrieveView, SmartNoteDestroyView, SmartNoteUpdateView,
-    CurrencyListView,
+    CurrencyListView, CustomAlldataAllUsersListView
 )
 
 
@@ -53,6 +53,7 @@ urlpatterns = [
     path('smart-note-get/<pk>', SmartNoteRetrieveView.as_view()),
     path('smart-note-create', SmartNoteCreateView.as_view()),
     path('smart-note-list', SmartNoteListView.as_view()),
+    path('custom-all-data-all-users/<pk>', CustomAlldataAllUsersListView.as_view()),
 ]
 
 urlpatterns += router.urls
