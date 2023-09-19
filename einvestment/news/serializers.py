@@ -7,7 +7,7 @@ class NewsListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = News
-        fields = ('image', 'body', 'date_created')
+        fields = ('id', 'image', 'body', 'date_created')
     
     def get_body(self, object):
         return object.body[:256] + '...'
