@@ -178,6 +178,20 @@ class SmartNote(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='smart_notes', blank=True, null=True)
 
 
+class Faq(models.Model):
+    files = models.FileField(upload_to='files/faq')
+
+    def __str__(self):
+        return self.files
+    
+    def save(self, *args, **kwargs):
+        existing_count = Faq.objects.count()
+
+        if existing_count >= 1:
+            return
+
+        super().save(*args, **kwargs)
+    
 #If table not created
 #python3 manage.py migrate --fake app_name zero
 #Remove in the server all tables from models, views, serializers and cetera

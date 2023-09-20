@@ -15,14 +15,14 @@ from .serializers import (
     AllDataListSerializer, AllDataAllUsersListSerializer, CategorySerializer,
     LocationSerializer, ApproveRejectInvestorSerializer, InvestorInfoOwnSerializer,
     AllDataFilterSerializer, AreaSerializer, SmartNoteCreateSerializer, SmartNoteListRetrieveSerializer,
-    SmartNoteUpdateSerializer, CurrencySerializer, CustomIdSerializer
+    SmartNoteUpdateSerializer, CurrencySerializer, CustomIdSerializer, FaqSerializer
 )
 from .permissions import (
     IsLegal,
 )
 from .models import (
     Status, MainData, InformativeData, FinancialData, ObjectPhoto, AllData,
-    InvestorInfo, Category, Area, SmartNote, CurrencyPrice, Currency
+    InvestorInfo, Category, Area, SmartNote, CurrencyPrice, Currency, Faq
 )
 from utils.logs import log
 
@@ -746,3 +746,13 @@ class SmartNoteUpdateView(generics.CreateAPIView):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer_info.data, status=status.HTTP_200_OK, headers=headers)
     
+
+class FaqRetriveView(generics.ListAPIView):
+    queryset = Faq.objects.all()
+    serializer_class = FaqSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def list(self, request, *args, **kwargs):
+        queryset = Faq.objects.first()
+        serializer = self.get_serializer(queryset)
+        return Response(serializer.data)

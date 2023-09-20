@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from . models import (
     MainData, InformativeData, FinancialData, ObjectPhoto, Status, AllData,
-    InvestorInfo, Category, Area, SmartNote, Currency, CurrencyPrice
+    InvestorInfo, Category, Area, SmartNote, Currency, CurrencyPrice, Faq
 )
 
 
@@ -58,3 +58,5 @@ admin.site.register(CurrencyPrice)
 class CurrencyPriceAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'cb_price')
     ordering = ('-date',)
+
+admin.site.register(Faq)

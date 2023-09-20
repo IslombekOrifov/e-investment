@@ -7,7 +7,7 @@ import uuid
 
 from .models import (
     MainData, InformativeData, FinancialData, ObjectPhoto, AllData,
-    InvestorInfo, Category, Area, SmartNote, Currency
+    InvestorInfo, Category, Area, SmartNote, Currency, Faq
 )
 
 class MainDataSerializer(serializers.Serializer):
@@ -412,3 +412,9 @@ class SmartNoteUpdateSerializer(serializers.ModelSerializer):
 
 class CustomIdSerializer(serializers.Serializer):
     custom_id = serializers.CharField(max_length=30, allow_null=True, allow_blank=True)
+
+
+class FaqSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Faq
+        fields = '__all__'
